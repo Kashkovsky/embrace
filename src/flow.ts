@@ -6,7 +6,7 @@ import * as R from 'fp-ts/lib/Reader'
 import * as Record from 'fp-ts/lib/Record'
 import * as T from 'fp-ts/lib/These'
 import { TraversableWithIndex1 } from 'fp-ts/lib/TraversableWithIndex'
-import { flow, identity, pipe } from 'fp-ts/lib/function'
+import { constant, flow, identity, pipe } from 'fp-ts/lib/function'
 import { combineLatest, EMPTY, merge, NEVER, Observable, of } from 'rxjs'
 import * as Rx from 'rxjs/operators'
 import { UIAny, UIListAny } from './internal'
@@ -26,6 +26,8 @@ export namespace Flow {
   // We need a distributive conditional type here to hide @param T from the result type
   export type For<T> = T extends UIAny ? Flow<UI.ComposedAction<T>, UI.ComposedState<T>> : never
 
+  /** Noop flow for UI.Node.empty */
+  export const emptyFlow: Flow.For<UI.Node<never, never>> = constant(of<never>(void 0 as never))
   /**
    * WARNING: this function will break the flow composition.
    * Use it only when Embrace meets React (if you are creating the flow for `UI.Mount`).
@@ -248,13 +250,13 @@ export namespace Flow {
     ) as Flow.For<Node>
   }
 
-  type SomeFlow<Node extends UIAny> = Node extends UI.Union.Option<infer Some>
-    ? Flow.For<Some>
-    : never
+  type SomeFlow<Node extends UIAny> =
+    Node extends UI.Union.Option<infer Some> ? Flow.For<Some> : never
 
-  type OptionKindSelector<Node extends UIAny> = Node extends UI.Union.Option<infer Some>
-    ? R.Reader<Observable<UI.ComposedAction<Some>>, Observable<UnionTagValuesRecord<Node>>>
-    : never
+  type OptionKindSelector<Node extends UIAny> =
+    Node extends UI.Union.Option<infer Some>
+      ? R.Reader<Observable<UI.ComposedAction<Some>>, Observable<UnionTagValuesRecord<Node>>>
+      : never
 
   /**
    * Create a Flow for composition of the components (@see UI.Union.Node) from its value flow.
@@ -273,12 +275,12 @@ export namespace Flow {
     kindSelector: OptionKindSelector<Node>
   ): Flow.For<Node> {
     return composeUnion<Node>(
-      ({
+      {
         None: () => of(null as never),
         Some: Flow.composeKnot<Node['members']['Some']>({
           value: flow
         } as KnotFlowComposition<Node['members']['Some']>)
-      } as unknown) as UnionFlowComposition<Node>,
+      } as unknown as UnionFlowComposition<Node>,
       R.asks(actions =>
         pipe(
           actions,
@@ -290,21 +292,24 @@ export namespace Flow {
     )
   }
 
-  type ListItemFlowProvider<List extends UIListAny, T> = List extends UI.List<any, any, infer Item>
-    ? (data: T) => Flow<UI.ComposedAction<Item>, UI.ComposedState<Item>>
-    : never
-
-  type ListCollectionProvider<List extends UIListAny, T> = List extends UI.List<infer F, any, UIAny>
-    ? F extends URIS
-      ? R.Reader<Observable<UI.ComposedAction<List>>, Observable<Kind<F, T>>>
+  type ListItemFlowProvider<List extends UIListAny, T> =
+    List extends UI.List<any, any, infer Item>
+      ? (data: T) => Flow<UI.ComposedAction<Item>, UI.ComposedState<Item>>
       : never
-    : never
 
-  type ListTraversableState<List extends UIListAny> = List extends UI.List<infer F, infer I, UIAny>
-    ? F extends URIS
-      ? TraversableWithIndex1<F, I>
+  type ListCollectionProvider<List extends UIListAny, T> =
+    List extends UI.List<infer F, any, UIAny>
+      ? F extends URIS
+        ? R.Reader<Observable<UI.ComposedAction<List>>, Observable<Kind<F, T>>>
+        : never
       : never
-    : never
+
+  type ListTraversableState<List extends UIListAny> =
+    List extends UI.List<infer F, infer I, UIAny>
+      ? F extends URIS
+        ? TraversableWithIndex1<F, I>
+        : never
+      : never
 
   /**
    * Create a Flow for composition of the components (@see UI.List) from its children flow.
@@ -361,13 +366,10 @@ export namespace Flow {
     ) as Flow.For<List>
   }
 
-  export type AnimationDecisionFor<Tree extends UIAny> = Tree extends UI.Animated<
-    infer In,
-    infer Out,
-    infer Children
-  >
-    ? AnimationDecision<UI.ComposedState<Children>, In, Out>
-    : never
+  export type AnimationDecisionFor<Tree extends UIAny> =
+    Tree extends UI.Animated<infer In, infer Out, infer Children>
+      ? AnimationDecision<UI.ComposedState<Children>, In, Out>
+      : never
 
   /**
    * Represents a decision to start an @param In - @param Out transition animation based on a change in @param State
@@ -561,44 +563,42 @@ export namespace Flow {
   const WAIT_UNTIL_ANIMATION_END_EMITS_IF_IT_WAS_STARTED =
     WAIT_UNTIL_ANY_EVENTS_EMITS_FROM_ANIMATION * 10
 
-  type KnotFlowComposition<Node extends UIAny> = Node extends UI.Knot<
-    infer State,
-    infer Actions,
-    infer Children
-  >
-    ? IsNever<State> extends true
-      ? IsNever<Actions> extends true
-        ? RecordOfFlow<Children>
+  type KnotFlowComposition<Node extends UIAny> =
+    Node extends UI.Knot<infer State, infer Actions, infer Children>
+      ? IsNever<State> extends true
+        ? IsNever<Actions> extends true
+          ? RecordOfFlow<Children>
+          : RecordOfFlow<Children> & Record<'root', Flow<Actions, State>>
         : RecordOfFlow<Children> & Record<'root', Flow<Actions, State>>
-      : RecordOfFlow<Children> & Record<'root', Flow<Actions, State>>
-    : never
-
-  export type UnionFlowComposition<Node extends UIAny> = Node extends UI.Union<any, infer Members>
-    ? Members extends Record<string, UIAny>
-      ? {
-          readonly [K in keyof Members]: Flow<
-            UI.ComposedAction<Members[K]>,
-            UI.ComposedState<Members[K]>
-          >
-        }
       : never
-    : never
+
+  export type UnionFlowComposition<Node extends UIAny> =
+    Node extends UI.Union<any, infer Members>
+      ? Members extends Record<string, UIAny>
+        ? {
+            readonly [K in keyof Members]: Flow<
+              UI.ComposedAction<Members[K]>,
+              UI.ComposedState<Members[K]>
+            >
+          }
+        : never
+      : never
 
   type UnionTagValuesRecord<Node extends UIAny> = {
     readonly [key in UnionTag<Node>]: UnionKeys<Node>
   }
 
-  type UnionKindSelector<Node extends UIAny> = Node extends UI.Union<any, infer Members>
-    ? Members extends Record<string, UIAny>
-      ? R.Reader<Observable<UI.ComposedAction<Node>>, Observable<UnionTagValuesRecord<Node>>>
+  type UnionKindSelector<Node extends UIAny> =
+    Node extends UI.Union<any, infer Members>
+      ? Members extends Record<string, UIAny>
+        ? R.Reader<Observable<UI.ComposedAction<Node>>, Observable<UnionTagValuesRecord<Node>>>
+        : never
       : never
-    : never
 
   type UnionTag<Node extends UIAny> = Node extends UI.Union<infer Tag, any> ? Tag : never
 
-  type UnionKeys<Node extends UIAny> = Node extends UI.Union<any, infer Members>
-    ? keyof Members
-    : never
+  type UnionKeys<Node extends UIAny> =
+    Node extends UI.Union<any, infer Members> ? keyof Members : never
 }
 
 type RecordOfFlow<Children extends Record<string, UIAny>> = Record<
