@@ -1,14 +1,12 @@
-import * as Enzyme from "enzyme";
-import * as Adapter from "enzyme-adapter-react-16";
-import { flow } from "fp-ts/lib/function";
-import * as O from "fp-ts/lib/Option";
-import * as React from "react";
-import * as Rx from "rxjs/operators";
-
-import { F } from "@grammarly/focal";
-
-import { Flow, UI } from "../index";
-import { assertNever } from "./utils";
+import * as React from 'react'
+import * as Enzyme from 'enzyme'
+import * as Adapter from 'enzyme-adapter-react-16'
+import * as O from 'fp-ts/lib/Option'
+import { flow } from 'fp-ts/lib/function'
+import * as Rx from 'rxjs/operators'
+import { F } from '@grammarly/focal'
+import { Flow, UI } from '../index'
+import { assertNever } from './utils'
 
 describe('Flow.composeOption', () => {
   Enzyme.configure({ adapter: new Adapter() })
@@ -37,7 +35,7 @@ describe('Flow.composeOption', () => {
       comp1Flow,
       flow(
         Rx.map(() => O.none),
-        Rx.startWith({ _tag: 'Some' })
+        Rx.startWith({ _tag: 'Some' } as const)
       )
     )
 

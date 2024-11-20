@@ -3,8 +3,7 @@ import { IO } from 'fp-ts/lib/IO'
 import * as O from 'fp-ts/lib/Option'
 import * as R from 'fp-ts/lib/Reader'
 import * as Record from 'fp-ts/lib/Record'
-import { constVoid, flow, identity } from 'fp-ts/lib/function'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { constVoid, flow, identity, pipe } from 'fp-ts/lib/function'
 import { EMPTY, Observable, Subject } from 'rxjs'
 import * as Rx from 'rxjs/operators'
 import { F } from '@grammarly/focal'
@@ -171,7 +170,7 @@ export namespace UI {
   export type Any = UIAny
 
   export namespace Node {
-    export const empty: UI.Node<never, never> = () => (null as any) as ReactElement
+    export const empty: UI.Node<never, never> = () => null as any as ReactElement
 
     /**
      * Create an instance of {@link UI.Node}
@@ -474,7 +473,8 @@ export namespace UI {
     ): UI.Transition<keyof InTransition, keyof OutTransition> {
       return (s =>
         React.createElement(F.div, {
-          ['data-purpose' as any /** Focal does not allow data attributes in types =( */]: 'animation-wrapper',
+          ['data-purpose' as any /** Focal does not allow data attributes in types =( */]:
+            'animation-wrapper',
           children: s.children.children /** Transition's always has only one slot - `children` */,
           className: pipe(
             s.state,

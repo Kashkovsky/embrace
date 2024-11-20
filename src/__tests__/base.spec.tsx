@@ -1,17 +1,15 @@
-import * as Enzyme from "enzyme";
-import * as Adapter from "enzyme-adapter-react-16";
-import * as A from "fp-ts/lib/Array";
-import { Endomorphism, flow, identity } from "fp-ts/lib/function";
-import { pipe } from "fp-ts/lib/pipeable";
-import * as R from "fp-ts/lib/Record";
-import * as React from "react";
-import { of as rxOf } from "rxjs";
-import * as Rx from "rxjs/operators";
-
-import { F } from "@grammarly/focal";
-
-import { Flow, UI } from "../index";
-import { getMapFoldableWithIndex } from "./utils";
+import * as React from 'react'
+import * as Enzyme from 'enzyme'
+import * as Adapter from 'enzyme-adapter-react-16'
+import * as A from 'fp-ts/lib/Array'
+import { Endomorphism } from 'fp-ts/lib/Endomorphism'
+import * as R from 'fp-ts/lib/Record'
+import { flow, identity, pipe } from 'fp-ts/lib/function'
+import { of as rxOf } from 'rxjs'
+import * as Rx from 'rxjs/operators'
+import { F } from '@grammarly/focal'
+import { Flow, UI } from '../index'
+import { getMapFoldableWithIndex } from './utils'
 
 Enzyme.configure({ adapter: new Adapter() })
 
@@ -820,8 +818,8 @@ describe('UI Tree', () => {
                   a.key === 'comp1'
                     ? { ...res, [a.key]: a.action }
                     : 'comp1' in res
-                    ? state2
-                    : state1,
+                      ? state2
+                      : state1,
                 state1
               ),
               Rx.startWith(state1)
@@ -1269,11 +1267,10 @@ describe('UI Tree', () => {
   ): Endomorphism<{ comp1: string; comp2: string }> =>
     listReducer(a) as Endomorphism<{ comp1: string; comp2: string }>
 
-  const listReducer = <A extends string>(a: {
-    key: string
-    action: A
-  }): Endomorphism<{ [x: string]: string }> => res => ({
-    ...res,
-    [a.key]: a.action
-  })
+  const listReducer =
+    <A extends string>(a: { key: string; action: A }): Endomorphism<{ [x: string]: string }> =>
+    res => ({
+      ...res,
+      [a.key]: a.action
+    })
 })

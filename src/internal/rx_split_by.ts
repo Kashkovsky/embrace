@@ -1,7 +1,6 @@
 import * as O from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { pipe } from 'fp-ts/lib/function'
 import * as Rx from 'rxjs'
-import { RefCountSubscription } from 'rxjs/internal/operators/groupBy'
 
 /**
  * @desc Disjoin ADT to form union of Observables of ADT members, each with single property.
@@ -34,7 +33,7 @@ export function splitBy<Tag extends keyof ADT, ADT extends { readonly [K in Tag]
     state.pipe(source => source.lift(new SplitByOperator((adt: ADT) => adt[discriminant])))
 }
 
-class SplitByOperator<T, K> implements Rx.Operator<T, Rx.GroupedObservable<K, T>> {
+class SplitByOperator<T, K> implements Operator<T, Rx.GroupedObservable<K, T>> {
   constructor(private readonly _keySelector: (value: T) => K) {}
 
   call(
@@ -45,7 +44,7 @@ class SplitByOperator<T, K> implements Rx.Operator<T, Rx.GroupedObservable<K, T>
   }
 }
 
-class SplitBySubscriber<T, K> extends Rx.Subscriber<T> implements RefCountSubscription {
+class SplitBySubscriber<T, K> extends Rx.Subscriber<T> {
   public attemptedToUnsubscribe = false
   public count = 0
 
@@ -58,7 +57,6 @@ class SplitBySubscriber<T, K> extends Rx.Subscriber<T> implements RefCountSubscr
     super(destination)
   }
 
-  // eslint-disable-next-line @typescript-eslint/tslint/config
   protected _next(value: T) {
     const key = this._keySelector(value)
 
@@ -84,10 +82,25 @@ class SplitBySubscriber<T, K> extends Rx.Subscriber<T> implements RefCountSubscr
     const group = new Rx.BehaviorSubject<T>(value)
     this._currentGroup = O.some({ key, group })
 
-    this.destination.next(new Rx.GroupedObservable(key, group, this))
+    this.destination.next(this._createGroupedObservable(key, group))
   }
 
-  // eslint-disable-next-line @typescript-eslint/tslint/config
+  private _createGroupedObservable(key: K, groupSubject: Rx.SubjectLike<any>) {
+    const result: any = new Rx.Observable<T>(groupSubscriber => {
+      this.count++
+      const innerSub = groupSubject.subscribe(groupSubscriber)
+      return () => {
+        innerSub.unsubscribe()
+        if (--this.count === 0 && this.attemptedToUnsubscribe) {
+          this.unsubscribe()
+        }
+      }
+    })
+
+    result.key = key
+    return result
+  }
+
   protected _error(err: any) {
     pipe(
       this._currentGroup,
@@ -98,7 +111,6 @@ class SplitBySubscriber<T, K> extends Rx.Subscriber<T> implements RefCountSubscr
     this.destination.error(err)
   }
 
-  // eslint-disable-next-line @typescript-eslint/tslint/config
   protected _complete() {
     pipe(
       this._currentGroup,
@@ -117,4 +129,8 @@ class SplitBySubscriber<T, K> extends Rx.Subscriber<T> implements RefCountSubscr
       }
     }
   }
+}
+
+interface Operator<_T, R> {
+  call(subscriber: Rx.Subscriber<R>, source: any): Rx.TeardownLogic
 }

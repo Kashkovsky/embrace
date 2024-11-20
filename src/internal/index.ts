@@ -192,8 +192,8 @@ type _ChangeDescendant<
               // but with changed children
               Children, // split path into head and tail
               {
-                readonly // and continue traversing current pos path member, and increment iterator position
-                [K in Path[I.Pos<I>]]: _ChangeDescendant<
+                // and continue traversing current pos path member, and increment iterator position
+                readonly [K in Path[I.Pos<I>]]: _ChangeDescendant<
                   Children[Path[I.Pos<I>]],
                   Path,
                   NewNode,
@@ -211,8 +211,8 @@ type _ChangeDescendant<
               // but with changed members
               Members, // split path into head and tail
               {
-                readonly // and continue traversing current pos path member, and increment iterator position
-                [K in Path[I.Pos<I>]]: _ChangeDescendant<
+                // and continue traversing current pos path member, and increment iterator position
+                readonly [K in Path[I.Pos<I>]]: _ChangeDescendant<
                   Members[Path[I.Pos<I>]],
                   Path,
                   NewNode,
@@ -226,19 +226,16 @@ type _ChangeDescendant<
     }[I.Pos<I> extends Path['length'] ? 'node' : UIMatcher<Part>]
   : never
 
-export type GridWithSingleSlotWithoutStateAndActions<Node> = Node extends UI.Grid<
-  infer S,
-  infer A,
-  infer Slot
->
-  ? RecordWithSingleKey<Slot> extends never
-    ? never
-    : IsNever<S> extends true
-    ? IsNever<A> extends true
-      ? Node
-      : never
+export type GridWithSingleSlotWithoutStateAndActions<Node> =
+  Node extends UI.Grid<infer S, infer A, infer Slot>
+    ? RecordWithSingleKey<Slot> extends never
+      ? never
+      : IsNever<S> extends true
+        ? IsNever<A> extends true
+          ? Node
+          : never
+        : never
     : never
-  : never
 
 /**
  * Any renderable UI Tree element which has own `State` & `Action`
@@ -259,14 +256,14 @@ export type UIGroupAny = UI.Group<Record<string, UIAny>>
 type UIMatcher<Part> = Part extends UINodeAny
   ? 'node'
   : Part extends UIListAny
-  ? 'list'
-  : Part extends UICompositeAny
-  ? 'composite'
-  : Part extends UIKnotAny
-  ? 'knot'
-  : Part extends UIUnionAny
-  ? 'union'
-  : 'unknown'
+    ? 'list'
+    : Part extends UICompositeAny
+      ? 'composite'
+      : Part extends UIKnotAny
+        ? 'knot'
+        : Part extends UIUnionAny
+          ? 'union'
+          : 'unknown'
 
 // Wrapping in tuple disables type distribution in conditional types.
 // We need it to have a more readable union types.

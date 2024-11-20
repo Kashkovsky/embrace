@@ -3,8 +3,7 @@ import * as Enzyme from 'enzyme'
 import * as Adapter from 'enzyme-adapter-react-16'
 import * as O from 'fp-ts/lib/Option'
 import * as TH from 'fp-ts/lib/These'
-import { flow } from 'fp-ts/lib/function'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { flow, pipe } from 'fp-ts/lib/function'
 import { Observable, from as rxFrom, of as rxOf } from 'rxjs'
 import { SubscriptionLog } from 'rxjs/internal/testing/SubscriptionLog'
 import { TestMessage } from 'rxjs/internal/testing/TestMessage'
@@ -539,8 +538,8 @@ describe('Flow', () => {
       }
 
       testScheduler.run(({ cold, expectObservable, expectSubscriptions }) => {
-        const e1 = cold(' --a-b c--| ', actions)
-        const expected = 'x-y-- (z |)'
+        const e1 = cold(' --a-b c--|', actions)
+        const expected = 'x-y-- z--|'
         const subs = '    ^---- ---! '
 
         expectObservable(pipe(e1, animatedFlow)).toBe(expected, states)
@@ -1164,15 +1163,29 @@ describe('Flow', () => {
   const isTestMessage = (value: any): value is TestMessage =>
     value !== undefined && typeof value === 'object' && 'notification' in value
 
-  const msgFormat = (msg: TestMessage): Record<string, string | object> => ({
-    [`f(${msg.frame})[${msg.notification.kind}]`]: Array.isArray(msg.notification.value)
-      ? msg.notification.value.map(msgFormat)
-      : isTestMessage(msg.notification.value)
-      ? msgFormat(msg.notification.value)
-      : msg.notification.value !== undefined
-      ? msg.notification.value
-      : msg.notification.error
-  })
+  const msgFormat = (msg: TestMessage | string): Record<string, string | object> => {
+    if (isTestMessage(msg)) {
+      switch (msg.notification.kind) {
+        case 'N':
+          return {
+            [`f(${msg.frame})[${msg.notification.kind}]`]: Array.isArray(msg.notification.value)
+              ? msg.notification.value.map(msgFormat)
+              : isTestMessage(msg.notification.value)
+                ? msgFormat(msg.notification.value)
+                : msg.notification.value
+          }
+        case 'E':
+          return {
+            [`f(${msg.frame})[${msg.notification.kind}]`]: msg.notification.error
+          }
+        case 'C':
+        default:
+          return { [`f(${msg.frame})[${msg.notification.kind}]`]: '|' }
+      }
+    }
+
+    return {}
+  }
 
   const resFormat = (res: TestMessage | SubscriptionLog) =>
     res instanceof SubscriptionLog ? res : msgFormat(res)

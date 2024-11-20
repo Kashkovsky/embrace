@@ -1,5 +1,5 @@
 import * as O from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { pipe } from 'fp-ts/lib/function'
 import { Observable } from 'rxjs'
 import * as Rx from 'rxjs/operators'
 import { UI } from '../ui'
@@ -48,12 +48,12 @@ export namespace AnimationActions {
       animation: pipe(
         actions,
         Rx.filter((a): a is AnimationFromComposition<Transition> => a.action.key === 'root'),
-        Rx.map(a => ({ key: a.key, action: a.action.action } as AnimationFromIteration<Transition>))
+        Rx.map(a => ({ key: a.key, action: a.action.action }) as AnimationFromIteration<Transition>)
       ),
       action: pipe(
         actions,
         Rx.filter((a): a is ChildrenFromComposition<Action> => a.action.key === 'children'),
-        Rx.map(a => ({ key: a.key, action: a.action.action } as ChildrenFromIteration<Action>))
+        Rx.map(a => ({ key: a.key, action: a.action.action }) as ChildrenFromIteration<Action>)
       )
     }
   }

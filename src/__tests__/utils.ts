@@ -11,7 +11,7 @@ export function getMapFoldableWithIndex<K = never>(): FoldableWithIndex2C<any, K
 
   return {
     URI: 'Map',
-    _E: (undefined as unknown) as K,
+    _E: undefined as unknown as K,
     reduce: (fa, b, f) => reduceWithIndex(fa, b, (_, x, y: any) => f(x, y)),
     foldMap: M => (fa, f) => reduceWithIndex(fa, M.empty, (_, x, y: any) => M.concat(x, f(y))),
     reduceRight: (fa, b, f) => reduceWithIndex(fa, b, (_, x, y: any) => f(y, x)),

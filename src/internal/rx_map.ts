@@ -1,4 +1,4 @@
-import * as Eq from 'fp-ts/lib/Eq'
+import { Eq, fromEquals } from 'fp-ts/lib/Eq'
 import {
   FoldableWithIndex,
   FoldableWithIndex1,
@@ -60,7 +60,7 @@ export function fromFoldable<F, K>(
         ),
       new Map<K, BehaviorSubject<any>>()
     ),
-    Rx.distinctUntilChanged(getEqByValue<K, any>(Eq.fromEquals(() => true)).equals)
+    Rx.distinctUntilChanged(getEqByValue<K, any>(fromEquals(() => true)).equals)
   )
 }
 
@@ -68,7 +68,7 @@ export function fromFoldable<F, K>(
  * @returns Eq instance on Map which checks map keys equality by reference.
  * and map values by @param valueEq
  */
-function getEqByValue<K, A>(valueEq: Eq.Eq<A>): Eq.Eq<Map<K, A>> {
+function getEqByValue<K, A>(valueEq: Eq<A>): Eq<Map<K, A>> {
   return {
     equals: (a, b) => {
       if (a === b) {

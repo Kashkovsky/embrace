@@ -28,12 +28,12 @@
   },
   "dependencies": {
     "@grammarly/focal": "^0.8.5",
-    "fp-ts": "2.9.5",
     "ts-toolbelt": "6.9.9"
   },
   "peerDependencies": {
     "react": ">= 16.11.0 < 17.0.0-0",
-    "rxjs": ">= 6.3.3 < 7.0.0-0"
+    "fp-ts": "^2.16.2",
+    "rxjs": ">= 6.5.3 < 8.0.0-0"
   },
   "devDependencies": {
     "@grammarly/tslint-config": "0.6.0",
@@ -63,7 +63,7 @@
     "jest-environment-jsdom": "29.3.1",
     "react": "16.11.0",
     "react-dom": "16.11.0",
-    "rxjs": "6.5.3",
+    "rxjs": "7.8.1",
     "ts-jest": "29.1.1",
     "tslib": "^2.3.0",
     "tslint": "5.18.0",

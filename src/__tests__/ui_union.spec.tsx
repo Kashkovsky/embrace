@@ -2,8 +2,7 @@ import * as React from 'react'
 import * as Enzyme from 'enzyme'
 import * as Adapter from 'enzyme-adapter-react-16'
 import * as O from 'fp-ts/lib/Option'
-import { flow, identity } from 'fp-ts/lib/function'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { flow, identity, pipe } from 'fp-ts/lib/function'
 import { NEVER, Subject } from 'rxjs'
 import * as Rx from 'rxjs/operators'
 import { F } from '@grammarly/focal'
@@ -184,16 +183,16 @@ describe('union of', () => {
 
       expect(w.html()).toBe('<div name="second" data-render="0">init</div>')
 
-      i.next()
+      i.next(void 0)
       expect(w.html()).toBe(null)
 
-      i.next()
+      i.next(void 0)
       expect(w.html()).toBe('<div name="second" data-render="1">work1</div>')
 
-      i.next()
+      i.next(void 0)
       expect(w.html()).toBe(null)
 
-      i.next()
+      i.next(void 0)
       expect(w.html()).toBe('<div name="second" data-render="2">work3</div>')
     })
   })

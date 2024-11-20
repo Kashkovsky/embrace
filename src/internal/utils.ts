@@ -19,11 +19,8 @@ export type Exact<AllowedProps extends PropertyKey, A extends object> = A &
 
 export type RecordWithSingleKey<Keys> = Exclude<Keys, LastKey<Keys>> extends never ? Keys : never
 
-export type LastKey<T> = IntersectOf<T extends unknown ? (x: T) => void : never> extends (
-  x: infer P
-) => void
-  ? P
-  : never
+export type LastKey<T> =
+  IntersectOf<T extends unknown ? (x: T) => void : never> extends (x: infer P) => void ? P : never
 
 type IntersectOf<T> = (T extends unknown ? (k: T) => void : never) extends (k: infer I) => void
   ? I
